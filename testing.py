@@ -8,36 +8,31 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cmx
 
 
-def brute_force(train_data, bounds, sorted=False):
+bounds = {
+    'f0': [6.5, 7, 40],
+    'w0': [3.8, 4.7, 40],
+    'beta': [0.2, 0.8, 100]
+}
+diffs = [(b[1] - b[0]) / b[2] for b in bounds.values()]
+
+
+def brute_force(run, train_data, bounds, sorted=False):
     results = pd.DataFrame(columns=['f0', 'w0', 'beta', 'err'])
     bounds = {k: np.arange(v[0], v[1], (v[1]-v[0])/v[2]) for k, v in bounds.items()}
+    train_data = np.array(train_data)
+    train_data = [train_data.take(0, 1), train_data.take(1, 1)]
+
+    print('Trying weight combinations...')
     for weights in itertools.product(*bounds.values()):
-        err = eval_weights(dict(zip(bounds.keys(), weights)), train_data)
+        err = eval_weights(dict(zip(bounds.keys(), weights)), train_data, nparr=True)
         results.loc[len(results)] = [*weights, err]
-    results.to_csv('data/mapping/brute_force.csv')
+
+    results.to_csv(f'data/mapping/brute_force_{run}.csv')
     if sorted:
         results = dict(sorted(results.items(), key=lambda x: x[1]))
     return results
 
-run = 1
-train_data = training_data(run)
-
-bounds = {
-    'f0': [6, 7, 40],
-    'w0': [4, 5, 40],
-    'beta': [0, 0.5, 100]
-}
-diffs = [(b[1] - b[0]) / b[2] for b in bounds.values()]
-
-# test = brute_force(train_data, bounds)
-# i = 1
-# for k, v in test.items():
-#     print(f'({k[0]:.03f}, {k[1]:.03f}, {k[2]:.03f}): {v:.05f}')
-#     i += 1
-#     if i > 10:
-#         break
-
-def calculate_diff_map():
+def calculate_diff_map(run):
     df = pd.read_csv('data/mapping/brute_force.csv')
 
     print('Building 3D matrix...')
@@ -79,14 +74,32 @@ def calculate_diff_map():
     out['d_dw0'] = pd.Series(np.reshape(differentials[1], (-1,)))
     out['d_dbeta'] = pd.Series(np.reshape(differentials[2], (-1,)))
 
-    out.to_csv('data/mapping/diff_map.csv')
+    out.to_csv(f'data/mapping/diff_map_{run}.csv')
 
 
-calculate_diff_map()
+run = 1
+compute_map = False
 
-display = 'd_dw0'
-df = pd.read_csv('data/mapping/diff_map.csv')
-df = df[::15]
+if compute_map:
+    brute_force(training_data(run), bounds)
+    calculate_diff_map(run)
+
+display = 'error'
+sampling_slice = 3
+df = pd.read_csv(f'data/mapping/diff_map_{run}.csv')
+
+# slice up the data
+scale = 1
+df = df[::sampling_slice] / scale
+# df = df[df['beta'] <= 0.12]
+# df = df[df['beta'] <= 0.3]
+# df = df[df['w0'] > 4.2]
+# df = df[df[display] <= 2]
+# df = df[df[display] >= -2]
+df = df[df[display] <= 1]
+df = df[df[display] >= 0.1]
+
+# generate plot
 cm = plt.get_cmap('jet')
 cNorm = matplotlib.colors.Normalize(vmin=min(df[display]), vmax=max(df[display]))
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)

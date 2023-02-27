@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # add corresponding dict components from d2 to d1
 def sum_components(d1, d2):
@@ -81,12 +82,16 @@ def batcher(data, size):
             break
 
 # calculates the average squared error loss across the dataset
-def eval_weights(weights, data):
+def eval_weights(weights, data, nparr=False):
     predict = predictor(weights)
-    sum_loss = 0
-    for x, y in data:
-        sum_loss += loss(predict, x, y)
-    return sum_loss / len(data)
+    if nparr:
+        sum_loss = np.sum(loss(predict, data[0], data[1]))
+        return sum_loss / len(data[0])
+    else:
+        sum_loss = 0
+        for x, y in data:
+            sum_loss += loss(predict, x, y)
+        return sum_loss / len(data)
 
 def print_weights(weights):
     print(f'f0: {weights["f0"]:.03f}    w0: {weights["w0"]:.03f}    beta: {weights["beta"]:.03f}')

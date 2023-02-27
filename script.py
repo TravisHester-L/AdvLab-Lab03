@@ -30,6 +30,8 @@ initialize = {'f0': 5, 'w0': 4, 'beta': 1}
 # only do once to make raw data usable
 # process_data()
 
+final = []
+
 record_training = True
 for run in range(1, 5):
     record = None
@@ -52,6 +54,13 @@ for run in range(1, 5):
     )
     comparison.to_csv(f'data/comparisons/Run_{run}.csv')
 
+    error = eval_weights(weights, train_data)
+    final.append([run, weights['f0'], weights['w0'], weights['beta'], error])
+
     print(f'Run {run}:')
     print_weights(weights)
-    print(f'Avg squared err: {eval_weights(weights, train_data):.05f}\n')
+    print(f'Avg squared err: {error:.05f}\n')
+
+df = pd.DataFrame(data=final, columns=['run', 'f0', 'w0', 'beta', 'error'])
+df.set_index('run')
+df.to_csv('results.csv')

@@ -1,5 +1,5 @@
 import pandas as pd
-from math import pi
+from math import pi, sqrt
 from train import predictor
 
 col_names = ['Time', 'Angle1', 'Angle2', 'AngleAmp', 'DrivingFreq', 'Freq', 'AngleVel', 'DriverAngleVel']
@@ -46,7 +46,7 @@ def training_data(run):
 
 def generate_comparison(data, weights):
     predict = predictor(weights)
-    new = [[x, y, 0] for x, y in data]
+    new = [[x, sqrt(y), 0] for x, y in data]
     for i, point in enumerate(data):
-        new[i][2] = predict(point[0])
+        new[i][2] = sqrt(predict(point[0]))
     return new
