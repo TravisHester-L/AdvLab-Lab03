@@ -6,9 +6,11 @@ Code to perform regression via *stochastic gradient descent* on data collected i
 
 ### Where's the important stuff?
 
-For the weights I found, look at the bottom of each file in the `data/history` folder.
+For the weights I found, look in the `results.csv` file.
 
 To play around with the hyperparameters and run the fit yourself, look in `script.py` and run it.
+
+The training history gets dumped in the `data/history` folder and comparisons to the original data at each point are generated and stored in the `data/comparisons` folder (for easy plotting).
 
 ### What's all that other junk?
 
