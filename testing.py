@@ -77,14 +77,14 @@ def calculate_diff_map(run):
     out.to_csv(f'data/mapping/diff_map_{run}.csv')
 
 
-run = 1
+run = 2
 compute_map = False
 
 if compute_map:
-    brute_force(training_data(run), bounds)
+    brute_force(run, training_data(run), bounds)
     calculate_diff_map(run)
 
-display = 'error'
+display = 'd_dbeta'
 sampling_slice = 3
 df = pd.read_csv(f'data/mapping/diff_map_{run}.csv')
 
@@ -94,18 +94,28 @@ df = df[::sampling_slice] / scale
 # df = df[df['beta'] <= 0.12]
 # df = df[df['beta'] <= 0.3]
 # df = df[df['w0'] > 4.2]
-# df = df[df[display] <= 2]
-# df = df[df[display] >= -2]
-df = df[df[display] <= 1]
-df = df[df[display] >= 0.1]
+df = df[df[display] <= 2]
+df = df[df[display] >= -2]
 
 # generate plot
 cm = plt.get_cmap('jet')
 cNorm = matplotlib.colors.Normalize(vmin=min(df[display]), vmax=max(df[display]))
 scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm)
+
 fig = plt.figure()
 ax3d = fig.add_subplot(111, projection='3d')
 ax3d.scatter(df['f0'], df['w0'], df['beta'], c=scalarMap.to_rgba(df[display]))
+
+ax3d.set_xlabel('$f_0$', fontsize=20)
+ax3d.set_ylabel('$\\omega_0$', fontsize=20)
+ax3d.set_zlabel('$\\beta$', fontsize=20)
+
+ax3d.xaxis.set_rotate_label(False)
+ax3d.yaxis.set_rotate_label(False)
+ax3d.zaxis.set_rotate_label(False)
+
 scalarMap.set_array(df[display])
 fig.colorbar(scalarMap)
+
+plt.title(f'Run {run} - ' + r'$\frac{\partial}{\partial \beta}<Error^2>$')
 plt.show()
