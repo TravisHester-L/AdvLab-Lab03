@@ -1,4 +1,4 @@
-from data import training_data, process_data, generate_comparison
+from data import *
 from train import train_predictor, eval_weights, print_weights
 import pandas as pd
 
@@ -29,6 +29,9 @@ initialize = {'f0': 5, 'w0': 4, 'beta': 1}
 
 # only do once to make raw data usable
 # process_data()
+
+# only do once to compute phase differences
+# compute_phases()
 
 final = []
 

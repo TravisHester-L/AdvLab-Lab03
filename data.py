@@ -37,6 +37,24 @@ def process_data():
         new_df = pd.DataFrame({'freq': freq, 'amp': amp})
         new_df.to_csv(f'data/clean/Run_{run+1}.csv')
 
+def compute_phases():
+    for run, file in enumerate(raw_files):
+        # read file into DataFrame and rename columns
+        df = pd.read_csv(f'data/raw/{file}')
+        col_map = {df.columns[i]: col_names[i] for i in range(8)}
+        df.rename(columns=col_map, inplace=True)
+
+        # select columns and remove null values
+        keep = ['Time', 'Freq', 'Angle1', 'Angle2']
+        df = df[keep].dropna()
+        df.reset_index(drop=True, inplace=True)
+
+        # Find phase difference
+        df['Phase'] = df['Angle1'] - df['Angle2']
+
+        # Write data back out
+        df.to_csv(f'data/phase/Run_{run+1}.csv')
+
 def training_data(run):
     train_data = pd.read_csv(f'data/clean/Run_{run}.csv')
     train_data = list(
