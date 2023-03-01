@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from math import pi, sqrt
 from train import predictor
 
@@ -18,7 +19,7 @@ def process_data():
         df.rename(columns=col_map, inplace=True)
 
         # select freq and amp columns and remove null values
-        freq = df['Freq'].dropna()
+        freq = 2*pi * df['Freq'].dropna()
         amp = df['AngleAmp'].dropna()
 
         # find the difference in column length and shave off the extra
@@ -37,34 +38,34 @@ def process_data():
         new_df = pd.DataFrame({'freq': freq, 'amp': amp})
         new_df.to_csv(f'data/clean/Run_{run+1}.csv')
 
-def compute_phases():
-    for run, file in enumerate(raw_files):
-        # read file into DataFrame and rename columns
-        df = pd.read_csv(f'data/raw/{file}')
-        col_map = {df.columns[i]: col_names[i] for i in range(8)}
-        df.rename(columns=col_map, inplace=True)
+def predict_phase(freq, weights):
+    phase = np.arctan(2 * weights['beta'] * freq / (weights['w0']**2 - freq**2))
+    return phase
 
-        # select columns and remove null values
-        keep = ['Time', 'Freq', 'Angle1', 'Angle2']
-        df = df[keep].dropna()
-        df.reset_index(drop=True, inplace=True)
-
-        # Find phase difference
-        df['Phase'] = df['Angle1'] - df['Angle2']
-
-        # Write data back out
-        df.to_csv(f'data/phase/Run_{run+1}.csv')
+def compare_phases(run, weights):
+    df = pd.read_csv(f'data/phase/Run_{run}.csv')
+    df.drop(columns=['Unnamed: 0'], inplace=True)
+    df.rename(columns={'Phase': 'Phase (experimental)'}, inplace=True)
+    df['Phase (predicted)'] = predict_phase(df['Freq'], weights)
+    df.to_csv(f'data/comparisons/phase/Run_{run}.csv')
 
 def training_data(run):
     train_data = pd.read_csv(f'data/clean/Run_{run}.csv')
     train_data = list(
-        zip(2*pi * train_data['freq'], train_data['amp'] ** 2)
+        zip(train_data['freq'], train_data['amp'] ** 2)
     )
     return train_data
 
-def generate_comparison(data, weights):
-    predict = predictor(weights)
-    new = [[x, sqrt(y), 0] for x, y in data]
+def compare_amplitudes(data, weights, lab=None):
+    predict_ml = predictor(weights)
+    if lab is not None:
+        predict_lab = predictor(lab)
+        new = [[x, sqrt(y), 0, 0] for x, y in data]
+    else:
+        new = [[x, sqrt(y), 0] for x, y in data]
+
     for i, point in enumerate(data):
-        new[i][2] = sqrt(predict(point[0]))
+        new[i][2] = sqrt(predict_ml(point[0]))
+        if lab is not None:
+            new[i][3] = sqrt(predict_lab(point[0]))
     return new

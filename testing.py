@@ -33,7 +33,7 @@ def brute_force(run, train_data, bounds, sorted=False):
     return results
 
 def calculate_diff_map(run):
-    df = pd.read_csv('data/mapping/brute_force.csv')
+    df = pd.read_csv(f'data/mapping/brute_force_{run}.csv')
 
     print('Building 3D matrix...')
     size = (bounds['f0'][2], bounds['w0'][2], bounds['beta'][2])
@@ -77,8 +77,8 @@ def calculate_diff_map(run):
     out.to_csv(f'data/mapping/diff_map_{run}.csv')
 
 
-run = 2
-compute_map = False
+run = 3
+compute_map = True
 
 if compute_map:
     brute_force(run, training_data(run), bounds)
